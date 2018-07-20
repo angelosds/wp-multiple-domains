@@ -30,9 +30,6 @@ class MultipleDomains {
 
         define('AMBIENT_DOMAIN', $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST']);
 
-        echo AMBIENT_DOMAIN;
-        print_r( AMBIENT_DOMAINS );
-
         define('WP_HOME', AMBIENT_DOMAIN);
         define('WP_SITEURL', AMBIENT_DOMAIN);
     }
