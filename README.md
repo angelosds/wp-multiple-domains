@@ -4,7 +4,7 @@ A Wordpress plugin to develop wordpress with multiple domains/environments and j
 
 ## How to install
 
-Clone this repo to your wordpress plugins folder:
+Clone this repo to your wordpress plugins folder.
 
 Access your wordpress admin area and enable this plugin.
 
