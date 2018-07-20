@@ -44,8 +44,17 @@ class MultipleDomains {
 
         require_once $this->config_url;
     }
+
+    private function media_url() {
+        add_filter('wp_get_attachment_url', function ($url, $post_id) {
+            echo $url;
+        });
+    }
 }
 
+/**
+ * Replace domain in pages and admin
+ */
 add_action('after_setup_theme', 'setup');
 
 function setup() {
@@ -57,10 +66,17 @@ function setup() {
 }
 
 function buffer_start($buffer) {
-    $buffer = str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $buffer);
-    return $buffer; 
+    return str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $buffer);
 }
 
 function buffer_end() {
     ob_end_flush();
 }
+
+/**
+ * Replace domain in media gallery
+ */
+
+add_filter('wp_get_attachment_url', function ($url) {
+    return str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $url);
+});
