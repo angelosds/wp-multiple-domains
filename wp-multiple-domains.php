@@ -82,3 +82,10 @@ add_filter('wp_prepare_themes_for_js', function ($themes) {
 
     return $themes;
 });
+
+/**
+ * Replace domain in featured thumbnail box
+ */
+add_filter('admin_post_thumbnail_html', function ($html) {
+    return str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $html);
+});
