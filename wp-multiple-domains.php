@@ -12,43 +12,36 @@ License: MIT
 
 class MultipleDomains {
     private $file_url;
-    private $config_url;
     
     function __construct() {
-        $file_name = 'domains.php';
-        $this->file_url = plugin_dir_path(__FILE__) . $file_name;
-        $this->config_url = ABSPATH . 'wp-content/uploads/' . $file_name;
-
-        $this->init();
+        $this->file_url = plugin_dir_path(__FILE__) . 'domains.wmd';
     }
 
     /**
      * Set current URL as home and siteurl
      */
     public function init() {
-        $this->add_config_file();
-
-        define('AMBIENT_DOMAIN', $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST']);
+        $this->get_domains();
 
         define('WP_HOME', AMBIENT_DOMAIN);
         define('WP_SITEURL', AMBIENT_DOMAIN);
+
+        ob_start('buffer_start');
+
+        add_action('shutdown', 'buffer_end');
     }
 
     /**
-     * Copy domains file to uploads folder
+     * Recover domains from current site and config file
      */
-    private function add_config_file() {
-        if (!file_exists($this->config_url)) {
-            echo copy($this->file_url, $this->config_url);
+    private function get_domains() {
+        define('AMBIENT_DOMAIN', $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST']);
+
+        $domains_string = file_get_contents($this->file_url);
+        
+        if (!empty($domains_string)) {
+            define('AMBIENT_DOMAINS', explode(',', $domains_string));
         }
-
-        require_once $this->config_url;
-    }
-
-    private function media_url() {
-        add_filter('wp_get_attachment_url', function ($url, $post_id) {
-            echo $url;
-        });
     }
 }
 
@@ -59,10 +52,7 @@ add_action('after_setup_theme', 'setup');
 
 function setup() {
     $controller = new MultipleDomains();
-    
-    add_action('shutdown', 'buffer_end');
-
-    ob_start('buffer_start');
+    $controller->init();
 }
 
 function buffer_start($buffer) {
@@ -76,7 +66,19 @@ function buffer_end() {
 /**
  * Replace domain in media gallery
  */
-
 add_filter('wp_get_attachment_url', function ($url) {
     return str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $url);
+});
+
+/**
+ * Replace domain in themes gallery
+ */
+add_filter('wp_prepare_themes_for_js', function ($themes) {
+    foreach ($themes as $theme_index => $theme) {
+        foreach ($theme['screenshot'] as $screenshot_index => $screenshot) {
+            $themes[$theme_index]['screenshot'][$screenshot_index] = str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $screenshot);
+        }
+    }
+
+    return $themes;
 });
