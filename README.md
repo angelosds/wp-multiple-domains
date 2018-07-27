@@ -8,4 +8,4 @@ Clone this repo to your wordpress plugins folder.
 
 Access your wordpress admin area and enable this plugin.
 
-Plugin will create an `domains.php` file at `wp-content/uploads`, follow instructions at the file to configure your domains.
+At plugin folder, access `domains.wmd` and add all your domains to this files separated by commas.
