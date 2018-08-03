@@ -10,6 +10,18 @@ Author URI: https://github.com/angelosds
 License: MIT
 */
 
+/**
+ * Replace domain in pages and admin
+ */
+add_action('after_setup_theme', 'setup');
+
+$controller;
+
+function setup() {
+    $controller = new MultipleDomains();
+    $controller->init();
+}
+
 class MultipleDomains {
     private $file_url;
     
@@ -27,54 +39,13 @@ class MultipleDomains {
         define('WP_SITEURL', AMBIENT_DOMAIN);
 
         // Rendered HTML
-        ob_start([$this, 'buffer_start']);
-        add_action('shutdown', [$this, 'buffer_end']);
+        ob_start('buffer_start');
+        add_action('shutdown', 'buffer_end');
 
         // Replace domain in certain wordpress filters
-        add_filter('wp_get_attachment_url', [$this, 'media_gallery']);
-        add_filter('wp_prepare_themes_for_js', [$this, 'themes']);
-        add_filter('admin_post_thumbnail_html', [$this, 'thumbnail']);
-    }
-
-    /**
-     * Replace domain ocorrences in rendered HTML
-     */
-    function buffer_start($buffer) {
-        return $this->replace_string($buffer);
-    }
-    
-    /**
-     * Apply new html content with correct domain name
-     */
-    function buffer_end() {
-        ob_end_flush();
-    }
-
-    /**
-     * Replace domain in media gallery
-     */
-    function media_gallery($url) {
-        return $this->replace_string($url);
-    }
-
-    /**
-     * Replace domain in themes gallery
-     */
-    function themes($themes) {
-        foreach ($themes as $theme_index => $theme) {
-            foreach ($theme['screenshot'] as $screenshot_index => $screenshot) {
-                $themes[$theme_index]['screenshot'][$screenshot_index] = $this->replace_string($screenshot);
-            }
-        }
-    
-        return $themes;
-    }
-
-    /**
-     * Replace domain in featured thumbnail box
-     */
-    function thumbnail($html) {
-        return $this->replace_string($html);
+        add_filter('wp_get_attachment_url', 'media_gallery');
+        add_filter('wp_prepare_themes_for_js', 'themes');
+        add_filter('admin_post_thumbnail_html', 'thumbnail');
     }
 
     /**
@@ -82,28 +53,59 @@ class MultipleDomains {
      */
     private function get_domains() {
         define('AMBIENT_DOMAIN', $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST']);
-
+    
         $domains_string = file_get_contents($this->file_url);
         
         if (!empty($domains_string)) {
             define('AMBIENT_DOMAINS', explode(',', $domains_string));
         }
     }
-
-    /**
-     * Replaces original domain with new
-     */
-    private function replace_string($string) {
-        return str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $string);
-    }
 }
 
 /**
- * Replace domain in pages and admin
+ * Replace domain ocorrences in rendered HTML
  */
-add_action('after_setup_theme', 'setup');
+function buffer_start($buffer) {
+    return replace_string($buffer);
+}
 
-function setup() {
-    $controller = new MultipleDomains();
-    $controller->init();
+/**
+ * Apply new html content with correct domain name
+ */
+function buffer_end() {
+    ob_end_flush();
+}
+
+/**
+ * Replace domain in media gallery
+ */
+function media_gallery($url) {
+    return replace_string($url);
+}
+
+/**
+ * Replace domain in themes gallery
+ */
+function themes($themes) {
+    foreach ($themes as $theme_index => $theme) {
+        foreach ($theme['screenshot'] as $screenshot_index => $screenshot) {
+            $themes[$theme_index]['screenshot'][$screenshot_index] = $this->replace_string($screenshot);
+        }
+    }
+
+    return $themes;
+}
+
+/**
+ * Replace domain in featured thumbnail box
+ */
+function thumbnail($html) {
+    return replace_string($html);
+}
+
+/**
+ * Replaces original domain with new
+ */
+function replace_string($string) {
+    return str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $string);
 }
