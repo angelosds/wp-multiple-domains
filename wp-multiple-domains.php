@@ -13,20 +13,22 @@ License: MIT
 /**
  * Replace domain in pages and admin
  */
-add_action('after_setup_theme', 'setup');
+add_action('after_setup_theme', 'setup_domains');
 
 $controller;
 
-function setup() {
+function setup_domains() {
     $controller = new MultipleDomains();
     $controller->init();
 }
 
 class MultipleDomains {
+    public $domain;
+    public $domains;
     private $file_url;
     
     function __construct() {
-        $this->file_url = plugin_dir_path(__FILE__) . 'domains.wmd';
+        $this->file_url = plugin_dir_path(__FILE__) . 'domains.txt';
     }
 
     /**
@@ -35,8 +37,8 @@ class MultipleDomains {
     public function init() {
         $this->get_domains();
 
-        define('WP_HOME', AMBIENT_DOMAIN);
-        define('WP_SITEURL', AMBIENT_DOMAIN);
+        define('WP_HOME', $this->domain);
+        define('WP_SITEURL', $this->domain);
 
         // Rendered HTML
         ob_start('buffer_start');
@@ -52,12 +54,12 @@ class MultipleDomains {
      * Recover domains from current site and config file
      */
     private function get_domains() {
-        define('AMBIENT_DOMAIN', $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST']);
+        $this->domain = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
     
         $domains_string = file_get_contents($this->file_url);
         
         if (!empty($domains_string)) {
-            define('AMBIENT_DOMAINS', explode(',', $domains_string));
+            $this->domains = explode(',', $domains_string);
         }
     }
 }
@@ -89,7 +91,7 @@ function media_gallery($url) {
 function themes($themes) {
     foreach ($themes as $theme_index => $theme) {
         foreach ($theme['screenshot'] as $screenshot_index => $screenshot) {
-            $themes[$theme_index]['screenshot'][$screenshot_index] = $this->replace_string($screenshot);
+            $themes[$theme_index]['screenshot'][$screenshot_index] = replace_string($screenshot);
         }
     }
 
@@ -107,5 +109,5 @@ function thumbnail($html) {
  * Replaces original domain with new
  */
 function replace_string($string) {
-    return str_replace(AMBIENT_DOMAINS, AMBIENT_DOMAIN, $string);
+    return str_replace($controller->domains, $controller->domain, $string);
 }
